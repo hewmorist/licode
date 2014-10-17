@@ -57,6 +57,8 @@ var rpc = require('./../common/rpc');
 // Logger
 var log = logger.getLogger("ErizoAgent");
 
+var agentLeader = require('./erizoAgentLeader');
+
 var childs = [];
 
 var SEARCH_INTERVAL = 5000;
@@ -96,6 +98,7 @@ var launchErizoJS = function() {
     var erizoProcess = spawn('node', ['./../erizoJS/erizoJS.js', id], { detached: true, stdio: [ 'ignore', out, err ] });
     erizoProcess.unref();
     erizoProcess.on('close', function (code) {
+        console.log("Process died.");
         var index = idle_erizos.indexOf(id);
         var index2 = erizos.indexOf(id);
         if (index > -1) {
@@ -112,6 +115,7 @@ var launchErizoJS = function() {
 };
 
 var dropErizoJS = function(erizo_id, callback) {
+   console.log("Dropping process.");
    if (processes.hasOwnProperty(erizo_id)) {
       var process = processes[erizo_id];
       process.kill();
@@ -124,11 +128,15 @@ var fillErizos = function() {
     for (var i = idle_erizos.length; i<GLOBAL.config.erizoAgent.prerunProcesses; i++) {
         launchErizoJS();
     }
+    agentLeader.setLoad(erizos.length, GLOBAL.config.erizoAgent.maxProcesses);
 };
+
+agentLeader.setDeleteErizoJSCallback(dropErizoJS);
 
 var api = {
     createErizoJS: function(id, callback) {
         try {
+console.log("createErizoJS ", id);
             var erizo_id = idle_erizos.pop();
             callback("callback", erizo_id);
 
@@ -161,10 +169,12 @@ rpc.connect(function () {
     "use strict";
     rpc.setPublicRPC(api);
 
-    var rpcID = "ErizoAgent";
-    
-
-    rpc.bind(rpcID);
+    agentLeader.retrieveId(function(id) {
+        rpc.bind(id);
+    });
+//    var rpcID = agentLeader.UID_HEAD + agentLeader.getId();
+//
+//   rpc.bind(rpcID);
 
 });
 
