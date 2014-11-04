@@ -1,6 +1,7 @@
 {
   "name": "licode",
   "version": "0.1.0",
+  "main:": "./erizo_controller/erizoClient/dist/erizo.js",
   "description": "Open Source Communication Provider",
   "devDependencies": {
     "vows": "0.6.x",
