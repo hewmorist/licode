@@ -1,14 +1,22 @@
 /*global require, logger. setInterval, clearInterval, Buffer, exports*/
+var express = require('express');
+var fs = require("fs");
+
 var crypto = require('crypto');
 var rpcPublic = require('./rpc/rpcPublic');
 var ST = require('./Stream');
 var http = require('http');
+var https = require('https');
 var server = http.createServer();
-var io = require('socket.io').listen(server, {log:false});
+//var io = require('socket.io').listen(server, {log:false});
 var config = require('./../../licode_config');
 var Permission = require('./permission');
 var Getopt = require('node-getopt');
 
+var options = {
+    key: fs.readFileSync('../../extras/basic_example/cert/key.pem').toString(),
+    cert: fs.readFileSync('../../extras/basic_example/cert/cert.pem').toString()
+};
 // Configuration default values
 GLOBAL.config = config || {};
 GLOBAL.config.erizoController = GLOBAL.config.erizoController || {};
@@ -31,6 +39,37 @@ GLOBAL.config.erizoController.interval_time_keepAlive = GLOBAL.config.erizoContr
 GLOBAL.config.erizoController.sendStats = GLOBAL.config.erizoController.sendStats || false;
 GLOBAL.config.erizoController.recording_path = GLOBAL.config.erizoController.recording_path || undefined;
 GLOBAL.config.erizoController.roles = GLOBAL.config.erizoController.roles || {"presenter":{"publish": true, "subscribe":true, "record":true}, "viewer":{"subscribe":true}, "viewerWithData":{"subscribe":true, "publish":{"audio":false,"video":false,"screen":false,"data":true}}};
+
+var app = express();
+
+app.use(express.bodyParser());
+
+app.configure(function () {
+    "use strict";
+    app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+    app.use(express.logger());
+});
+
+app.use(function (req, res, next) {
+    "use strict";
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header('Access-Control-Allow-Headers', 'origin, content-type');
+    if (req.method == 'OPTIONS') {
+        res.send(200);
+    }
+    else {
+        next();
+    }
+});
+
+
+
+var sslserver = https.createServer(options, app);
+var io = require('socket.io').listen(sslserver, {log:true});
+sslserver.listen(8443);
+
+
 
 // Parse command line arguments
 var getopt = new Getopt([
@@ -88,7 +127,7 @@ var controller = require('./roomController');
 // Logger
 var log = logger.getLogger("ErizoController");
 
-server.listen(8080);
+//server.listen(8080);
 
 io.set('log level', 0);
 
