@@ -57,6 +57,7 @@ var controller = require('./erizoJSController');
 
 // Logger
 var log = logger.getLogger("ErizoJS");
+var agentId = process.argv[3];
 
 var ejsController = controller.ErizoJSController();
 
@@ -76,7 +77,11 @@ rpc.connect(function () {
 
         rpc.bind("ErizoJS_" + rpcID, function() {
             log.info("ErizoJS started");
-            
+            if (agentId) {
+                rpc.callRpc(agentId, "erizoJSReady", [rpcID], { callback: function(answer) {
+                    log.info("registered with agent:", answer);
+                }});
+            }
         });
     } catch (err) {
         log.error("Error", err);

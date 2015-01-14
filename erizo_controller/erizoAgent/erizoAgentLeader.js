@@ -2,6 +2,7 @@
 var Getopt = require('node-getopt');
 
 var config = require('./../../licode_config');
+var os = require('os');
 
 // Configuration default values
 GLOBAL.config = config || {};
@@ -9,6 +10,7 @@ GLOBAL.config.erizoAgentLeader = GLOBAL.config.erizoAgentLeader || {};
 GLOBAL.config.erizoAgentLeader.netMaxByteS = GLOBAL.config.erizoAgentLeader.netMaxByteS || 12500000;
 GLOBAL.config.erizoAgentLeader.netInterface = GLOBAL.config.erizoAgentLeader.netInterface || 'eth0'
 GLOBAL.config.erizoAgentLeader.reportInterval = GLOBAL.config.erizoAgentLeader.reportInterval || 7000;
+GLOBAL.config.erizoAgentLeader.name = GLOBAL.config.erizoAgentLeader.name || os.hostname();
 
 // Parse command line arguments
 var getopt = new Getopt([
@@ -56,13 +58,12 @@ var rpcAll = require('./../common/rpcFanout');
 // Logger
 var log = logger.getLogger("ErizoAgent");
 
-var os = require('os');
 var proc = require('node-proc');
 
 var agents = { };
 exports.UID_HEAD = 'UIdErizoAgent+';
 var isLeader = false;
-var myDeleteErizoJSCallback = {};
+var myDeleteErizoJSCallback = undefined;
 
 // make a unique id for this erizo agent - used for leader election
 var getUid = function() {
@@ -73,6 +74,7 @@ var myId = getUid();
 var myIdWasSet = false;
 var myIdCallback = [];
 var myLoad = {
+    name: GLOBAL.config.erizoAgentLeader.name,
     id: myId,
     current: 0,
     max: 0,
