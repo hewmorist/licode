@@ -35,7 +35,7 @@ Erizo.Speaker = function (spec) {
     // Volume icon 
     that.icon = document.createElement('img');
     that.icon.setAttribute('id', 'volume_' + that.id);
-    that.icon.setAttribute('src', that.url + '/assets/sound48.png');
+    that.icon.setAttribute('src', that.url + '/assets/images/sound48.png');
     that.icon.setAttribute('style', 'width: 80%; height: 100%; position: absolute;');
     that.div.appendChild(that.icon);
 
@@ -58,21 +58,21 @@ Erizo.Speaker = function (spec) {
         that.picker.oninput = function (evt) {
             if (that.picker.value > 0) {
                 that.media.muted = false;
-                that.icon.setAttribute('src', that.url + '/assets/sound48.png');
+                that.icon.setAttribute('src', that.url + '/assets/images/sound48.png');
             } else {
                 that.media.muted = true;
-                that.icon.setAttribute('src', that.url + '/assets/mute48.png');
+                that.icon.setAttribute('src', that.url + '/assets/images/mute48.png');
             }
             that.media.volume = that.picker.value / 100;
         };
 
         // Private functions
         show = function (displaying) {
-            that.picker.setAttribute('style', 'background: transparent; width: 32px; height: 100px; position: absolute; bottom: 90%; z-index: 1;' + that.div.offsetHeight + 'px; right: 0px; -webkit-appearance: slider-vertical; display: ' + displaying);
+            that.picker.setAttribute('style', 'width: 32px; height: 100px; position: absolute; bottom: 90%; z-index: 1;' + that.div.offsetHeight + 'px; right: 0px; -webkit-appearance: slider-vertical; display: ' + displaying);
         };
 
         mute = function () {
-            that.icon.setAttribute('src', that.url + '/assets/mute48.png');
+            that.icon.setAttribute('src', that.url + '/assets/images/mute48.png');
             lastVolume = that.picker.value;
             that.picker.value = 0;
             that.media.volume = 0;
@@ -80,7 +80,7 @@ Erizo.Speaker = function (spec) {
         };
 
         unmute = function () {
-            that.icon.setAttribute('src', that.url + '/assets/sound48.png');
+            that.icon.setAttribute('src', that.url + '/assets/images/sound48.png');
             that.picker.value = lastVolume;
             that.media.volume = that.picker.value / 100;
             that.media.muted = false;
@@ -109,13 +109,13 @@ Erizo.Speaker = function (spec) {
 
         mute = function () {
             that.media.muted = true;
-            that.icon.setAttribute('src', that.url + '/assets/mute48.png');
+            that.icon.setAttribute('src', that.url + '/assets/images/mute48.png');
             that.stream.stream.getAudioTracks()[0].enabled = false;
         };
 
         unmute = function () {
             that.media.muted = false;
-            that.icon.setAttribute('src', that.url + '/assets/sound48.png');
+            that.icon.setAttribute('src', that.url + '/assets/images/sound48.png');
             that.stream.stream.getAudioTracks()[0].enabled = true;
         };
 
@@ -125,8 +125,18 @@ Erizo.Speaker = function (spec) {
             } else {
                 mute();
             }
+        };
+        
+        that.mute = function() {
+            mute();
+        };
+        
+        that.unmute = function() {
+            unmute();
+        };
+        
+        mute();
         }
-    }
   
 
     document.getElementById(that.elementID).appendChild(that.div);

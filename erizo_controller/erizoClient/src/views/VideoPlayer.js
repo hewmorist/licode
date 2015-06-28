@@ -110,7 +110,7 @@ Erizo.VideoPlayer = function (spec) {
     that.loader = document.createElement('img');
     that.loader.setAttribute('style', 'width: 16px; height: 16px; position: absolute; top: 50%; left: 50%; margin-top: -8px; margin-left: -8px');
     that.loader.setAttribute('id', 'back_' + that.id);
-    that.loader.setAttribute('src', that.url + '/assets/loader.gif');
+    that.loader.setAttribute('src', that.url + '/assets/images/loader.gif');
 
     // Video tag
     that.video = document.createElement('video');
@@ -139,7 +139,7 @@ Erizo.VideoPlayer = function (spec) {
 
     that.resizer = new L.ResizeSensor(that.container, that.resize);
 
-    that.resize();
+    //that.resize();
 
     // Bottom Bar
     that.bar = new Erizo.Bar({elementID: 'player_' + that.id, id: that.id, stream: spec.stream, media: that.video, options: spec.options});
