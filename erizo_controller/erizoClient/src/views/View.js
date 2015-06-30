@@ -11,6 +11,6 @@ Erizo.View = function (spec) {
     // Variables
 
     // URL where it will look for icons and assets
-    that.url = "https://10.0.0.8:8445/mpxweb";
+    that.url = "https://www.mpxreach.com:8445/mpxweb";
     return that;
 };
