@@ -5,7 +5,7 @@ var config = {}
  It's used by Nuve, ErizoController, ErizoAgent and ErizoJS
 **********************************************************/
 config.rabbit = {};
-config.rabbit.host = 'localhost'; //default value: 'localhost'
+config.rabbit.host = 'video2.infinesse.com'; //default value: 'localhost'
 config.rabbit.port = 5672; //default value: 5672
 config.logger = {};
 config.logger.config_file = '../log4js_configuration.json'; //default value: "../log4js_configuration.json"
@@ -25,7 +25,7 @@ config.cloudProvider.secretAccessKey = '';
  NUVE CONFIGURATION
 **********************************************************/
 config.nuve = {};
-config.nuve.dataBaseURL = "localhost/nuvedb"; // default value: 'localhost/nuvedb'
+config.nuve.dataBaseURL = "nuveadmin:ndc9du94v6@ds045622.mongolab.com:45622/nuvedb"; // default value: 'localhost/nuvedb'
 config.nuve.superserviceID = '_auto_generated_ID_'; // default value: ''
 config.nuve.superserviceKey = '_auto_generated_KEY_'; // default value: ''
 config.nuve.testErizoController = 'localhost:8080'; // default value: 'localhost:8080'
@@ -47,12 +47,12 @@ config.erizoController.maxVideoBW = 300; //default value: 300
 
 // Public erizoController IP for websockets (useful when behind NATs)
 // Use '' to automatically get IP from the interface
-config.erizoController.publicIP = ''; //default value: ''
+config.erizoController.publicIP = '10.0.0.36'; //default value: ''
 // Use '' to use the public IP address instead of a hostname
 config.erizoController.hostname = ''; //default value: ''
-config.erizoController.port = 8080; //default value: 8080
+config.erizoController.port = 8443; //default value: 8080
 // Use true if clients communicate with erizoController over SSL
-config.erizoController.ssl = false; //default value: false
+config.erizoController.ssl = true; //default value: false
 
 // Use the name of the inferface you want to bind to for websockets
 // config.erizoController.networkInterface = 'eth1' // default value: undefined
