@@ -156,7 +156,7 @@ exports.keepAlive = function (id, callback) {
     } else {
         erizoControllers[id].keepAlive = 0;
         result = 'ok';
-        //log.info('KA: ', id);
+        log.info('KA: ', id);
     }
     callback(result);
 };
