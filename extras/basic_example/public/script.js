@@ -8,6 +8,10 @@ function getParameterByName(name) {
   return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+function testConnection () {
+  window.location = "/connection_test.html";
+}
+
 function startRecording () {
   if (room !== undefined){
     if (!recording){
@@ -86,6 +90,7 @@ window.onload = function () {
         var streams = [];
         streams.push(streamEvent.stream);
         subscribeToStreams(streams);
+        document.getElementById("recordButton").disabled = false;
       });
 
       room.addEventListener("stream-removed", function (streamEvent) {
@@ -95,6 +100,12 @@ window.onload = function () {
           var element = document.getElementById(stream.elementID);
           document.body.removeChild(element);
         }
+      });
+      
+      room.addEventListener("stream-failed", function (streamEvent){
+          console.log("STREAM FAILED, DISCONNECTION");
+          room.disconnect();
+
       });
 
       room.connect();

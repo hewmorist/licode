@@ -20,6 +20,7 @@ Erizo.Stream = function (spec) {
     that.screen = spec.screen;
     that.videoSize = spec.videoSize;
     that.extensionId = spec.extensionId;
+
     if (that.videoSize !== undefined && (!(that.videoSize instanceof Array) || that.videoSize.length != 4)) {
         throw Error("Invalid Video Size");
     }
@@ -81,6 +82,8 @@ Erizo.Stream = function (spec) {
           var videoOpt = spec.video;
           if (videoOpt == true && that.videoSize !== undefined) {
             videoOpt = {mandatory: {minWidth: that.videoSize[0], minHeight: that.videoSize[1], maxWidth: that.videoSize[2], maxHeight: that.videoSize[3]}};
+          } else if (spec.screen == true){
+            videoOpt = true;
           }
           var opt = {video: videoOpt, audio: spec.audio, fake: spec.fake, screen: spec.screen, extensionId:that.extensionId};
           L.Logger.debug(opt);
@@ -107,7 +110,8 @@ Erizo.Stream = function (spec) {
           }
       };
 
-    that.close = function () {
+
+     that.close = function () {
         if (that.local) {
             if (that.room !== undefined) {
                 that.room.unpublish(that);
@@ -204,6 +208,16 @@ Erizo.Stream = function (spec) {
             return null;
         }
     };
+
+    that.updateConfiguration = function (config, callback) {
+        if (config === undefined)
+            return;
+        if (that.pc){
+            that.pc.updateSpec(config, callback);
+        } else {
+            return ("This stream has not been published, ignoring");
+        }
+    }
 
     return that;
 };

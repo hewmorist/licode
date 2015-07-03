@@ -6,22 +6,18 @@
 #include "../rtp/RtpVP8Parser.h"
 
 namespace erizo {
-#define FIR_INTERVAL_MS 4000
 
-  DEFINE_LOGGER(ExternalOutput, "media.ExternalOutput");
-
-// We'll allow our audioQueue to be significantly larger than our video queue
-// This is safe because A) audio is a lot smaller, so it isn't a big deal to hold on to a lot of it and
-// B) our audio sample rate is typically 20 msec packets; video is anywhere from 33 to 100 msec (30 to 10 fps)
-// Allowing the audio queue to hold more will help prevent loss of data when the video framerate is low.
-ExternalOutput::ExternalOutput(const std::string& outputUrl) : fec_receiver_(this), audioQueue_(600, 60), videoQueue_(120, 60), inited_(false), video_stream_(NULL), audio_stream_(NULL),
-    firstVideoTimestamp_(-1), firstAudioTimestamp_(-1), firstDataReceived_(-1), videoOffsetMsec_(-1), audioOffsetMsec_(-1), vp8SearchState_(lookingForStart)
+DEFINE_LOGGER(ExternalOutput, "media.ExternalOutput");
+ExternalOutput::ExternalOutput(const std::string& outputUrl) : fec_receiver_(this), audioQueue_(5.0, 10.0), videoQueue_(5.0, 10.0), inited_(false), video_stream_(NULL), audio_stream_(NULL),
+    firstVideoTimestamp_(-1), firstAudioTimestamp_(-1), firstDataReceived_(-1), videoOffsetMsec_(-1), audioOffsetMsec_(-1), vp8SearchState_(lookingForStart), needToSendFir_(true)
 {
     ELOG_DEBUG("Creating output to %s", outputUrl.c_str());
 
     // TODO these should really only be called once per application run
     av_register_all();
     avcodec_register_all();
+
+    videoQueue_.setTimebase(90000); // our video timebase is easy: always 90 khz.  We'll set audio once we receive a packet and can inspect its header.
 
 
     context_ = avformat_alloc_context();
@@ -41,7 +37,6 @@ ExternalOutput::ExternalOutput(const std::string& outputUrl) : fec_receiver_(thi
     }
 
     unpackagedBufferpart_ = unpackagedBuffer_;
-    lastFullIntraFrameRequest_ = 0;
     sinkfbSource_ = this;
     fbSink_ = NULL;
     unpackagedSize_ = 0;
@@ -106,7 +101,7 @@ int32_t ExternalOutput::OnReceivedPayloadData(const uint8_t* payload_data, const
 void ExternalOutput::writeAudioData(char* buf, int len){
     RtpHeader* head = reinterpret_cast<RtpHeader*>(buf);
     uint16_t currentAudioSequenceNumber = head->getSeqNumber();
-    if (currentAudioSequenceNumber != lastAudioSequenceNumber_ + 1) {
+    if (firstAudioTimestamp_ != -1 && currentAudioSequenceNumber != lastAudioSequenceNumber_ + 1) {
         // Something screwy.  We should always see sequence numbers incrementing monotonically.
         ELOG_DEBUG("Unexpected audio sequence number; current %d, previous %d", currentAudioSequenceNumber, lastAudioSequenceNumber_);
     }
@@ -142,14 +137,14 @@ void ExternalOutput::writeAudioData(char* buf, int len){
         currentTimestamp += 0xFFFFFFFF;
     }
 
-    long long timestampToWrite = (currentTimestamp - firstAudioTimestamp_) / (audio_stream_->codec->time_base.den / audio_stream_->time_base.den);
+    long long timestampToWrite = (currentTimestamp - firstAudioTimestamp_) / (audio_stream_->codec->sample_rate / audio_stream_->time_base.den);    // generally 48000 / 1000 for the denominator portion, at least for opus
     // Adjust for our start time offset
     timestampToWrite += audioOffsetMsec_ / (1000 / audio_stream_->time_base.den);   // in practice, our timebase den is 1000, so this operation is a no-op.
 
-    /* ELOG_DEBUG("Writing audio frame %d with timestamp %u, normalized timestamp %u, audio offset msec %u, length %d, input timebase: %d/%d, target timebase: %d/%d", */
-    /*            head->getSeqNumber(), head->getTimestamp(), timestampToWrite, audioOffsetMsec_, ret, */
-    /*            audio_stream_->codec->time_base.num, audio_stream_->codec->time_base.den,    // timebase we requested */
-    /*            audio_stream_->time_base.num, audio_stream_->time_base.den);                 // actual timebase */
+//     ELOG_INFO("Writing audio frame %d with timestamp %u, normalized timestamp %u, audio offset msec %u, length %d, input timebase: %d/%d, target timebase: %d/%d",
+//                head->getSeqNumber(), head->getTimestamp(), timestampToWrite, audioOffsetMsec_, len - head->getHeaderLength(),
+//                1, audio_stream_->codec->sample_rate,    // timebase we requested
+//                audio_stream_->time_base.num, audio_stream_->time_base.den);                 // actual timebase
 
     AVPacket avpkt;
     av_init_packet(&avpkt);
@@ -157,8 +152,7 @@ void ExternalOutput::writeAudioData(char* buf, int len){
     avpkt.size = len - head->getHeaderLength();
     avpkt.pts = timestampToWrite;
     avpkt.stream_index = 1;
-    av_write_frame(context_, &avpkt);
-    av_free_packet(&avpkt);
+    av_interleaved_write_frame(context_, &avpkt);   // takes ownership of the packet
 }
 
 void ExternalOutput::writeVideoData(char* buf, int len){
@@ -275,7 +269,7 @@ void ExternalOutput::writeVideoData(char* buf, int len){
 
         /* ELOG_DEBUG("Writing video frame %d with timestamp %u, normalized timestamp %u, video offset msec %u, length %d, input timebase: %d/%d, target timebase: %d/%d", */
         /*            head->getSeqNumber(), head->getTimestamp(), timestampToWrite, videoOffsetMsec_, unpackagedSize_, */
-        /*            video_stream_->codec->time_base.num, video_stream_->codec->time_base.den,    // timebase we requested */
+        /*            video_stream_->time_base.num, video_stream_->time_base.den,    // timebase we requested */
         /*            video_stream_->time_base.num, video_stream_->time_base.den);                 // actual timebase */
 
         AVPacket avpkt;
@@ -284,8 +278,7 @@ void ExternalOutput::writeVideoData(char* buf, int len){
         avpkt.size = unpackagedSize_;
         avpkt.pts = timestampToWrite;
         avpkt.stream_index = 0;
-        av_write_frame(context_, &avpkt);
-        av_free_packet(&avpkt);
+        av_interleaved_write_frame(context_, &avpkt);   // takes ownership of the packet
         unpackagedSize_ = 0;
         unpackagedBufferpart_ = unpackagedBuffer_;
     }
@@ -319,8 +312,8 @@ bool ExternalOutput::initContext() {
         video_stream_->codec->codec_id = context_->oformat->video_codec;
         video_stream_->codec->width = 640;
         video_stream_->codec->height = 480;
-        video_stream_->codec->time_base = (AVRational){1,30};   // A decent guess here suffices; if processing the file with ffmpeg,
-                                                                // use -vsync 0 to force it not to duplicate frames.
+        video_stream_->time_base = (AVRational){1,30};   // A decent guess here suffices; if processing the file with ffmpeg,
+                                                         // use -vsync 0 to force it not to duplicate frames.
         video_stream_->codec->pix_fmt = PIX_FMT_YUV420P;
         if (context_->oformat->flags & AVFMT_GLOBALHEADER){
             video_stream_->codec->flags|=CODEC_FLAG_GLOBAL_HEADER;
@@ -337,7 +330,7 @@ bool ExternalOutput::initContext() {
         audio_stream_->id = 1;
         audio_stream_->codec->codec_id = context_->oformat->audio_codec;
         audio_stream_->codec->sample_rate = context_->oformat->audio_codec == AV_CODEC_ID_PCM_MULAW ? 8000 : 48000; // TODO is it always 48 khz for opus?
-        audio_stream_->codec->time_base = (AVRational) { 1, audio_stream_->codec->sample_rate };
+        audio_stream_->time_base = (AVRational) { 1, audio_stream_->codec->sample_rate };
         audio_stream_->codec->channels = context_->oformat->audio_codec == AV_CODEC_ID_PCM_MULAW ? 1 : 2;   // TODO is it always two channels for opus?
         if (context_->oformat->flags & AVFMT_GLOBALHEADER){
             audio_stream_->codec->flags|=CODEC_FLAG_GLOBAL_HEADER;
@@ -378,17 +371,16 @@ void ExternalOutput::queueData(char* buffer, int length, packetType type){
           context_->oformat->audio_codec = AV_CODEC_ID_PCM_MULAW;
         }
     }
-    
-    timeval time; 
-    gettimeofday(&time, NULL);
-    unsigned long long millis = (time.tv_sec * 1000) + (time.tv_usec / 1000);
-    if (millis -lastFullIntraFrameRequest_ >FIR_INTERVAL_MS){
-      this->sendFirPacket();
-      lastFullIntraFrameRequest_ = millis;
+
+    if (needToSendFir_) {
+        this->sendFirPacket();
+        needToSendFir_ = false;
     }
 
     if (type == VIDEO_PACKET){
         if(this->videoOffsetMsec_ == -1) {
+            timeval time;
+            gettimeofday(&time, NULL);
             videoOffsetMsec_ = ((time.tv_sec * 1000) + (time.tv_usec / 1000)) - firstDataReceived_;
             ELOG_DEBUG("File %s, video offset msec: %llu", context_->filename, videoOffsetMsec_);
         }
@@ -403,15 +395,28 @@ void ExternalOutput::queueData(char* buffer, int length, packetType type){
             webrtc::RTPHeader hackyHeader;
             hackyHeader.headerLength = h->getHeaderLength();
             hackyHeader.sequenceNumber = h->getSeqNumber();
-            fec_receiver_.AddReceivedRedPacket(hackyHeader, (const uint8_t*)buffer, length, ULP_90000_PT);
-            fec_receiver_.ProcessReceivedFec();
+
+            // AddReceivedRedPacket returns 0 if there's data to process
+            if(0 == fec_receiver_.AddReceivedRedPacket(hackyHeader, (const uint8_t*)buffer, length, ULP_90000_PT)) {
+                fec_receiver_.ProcessReceivedFec();
+            }
         } else {
             videoQueue_.pushPacket(buffer, length);
         }
     }else{
         if(this->audioOffsetMsec_ == -1) {
+            timeval time;
+            gettimeofday(&time, NULL);
             audioOffsetMsec_ = ((time.tv_sec * 1000) + (time.tv_usec / 1000)) - firstDataReceived_;
             ELOG_DEBUG("File %s, audio offset msec: %llu", context_->filename, audioOffsetMsec_);
+
+            // Let's also take a moment to set our audio queue timebase.
+            RtpHeader* h = reinterpret_cast<RtpHeader*>(buffer);
+            if(h->getPayloadType() == PCMU_8000_PT){
+                audioQueue_.setTimebase(8000);
+            } else if (h->getPayloadType() == OPUS_48000_PT) {
+                audioQueue_.setTimebase(48000);
+            }
         }
         audioQueue_.pushPacket(buffer, length);
     }
@@ -424,7 +429,6 @@ void ExternalOutput::queueData(char* buffer, int length, packetType type){
 
 int ExternalOutput::sendFirPacket() {
     if (fbSink_ != NULL) {
-        // ELOG_DEBUG("sending Full Intra-frame Request");
         int pos = 0;
         uint8_t rtcpPacket[50];
         // add full intra request indicator
