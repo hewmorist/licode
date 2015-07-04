@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Open Source Communication Provider",
   "devDependencies": {
+    "node-proc": "~0.0.1",
     "vows": "0.6.x",
     "coffee-script": "1.4.x",
     "winston": "~0.7.2",
