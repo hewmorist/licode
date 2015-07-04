@@ -16,6 +16,9 @@ GLOBAL.config.erizoAgent.maxProcesses = GLOBAL.config.erizoAgent.maxProcesses ||
 //
 //var BINDED_INTERFACE_NAME = GLOBAL.config.erizoAgent.networkInterface;
 //=======
+
+var BINDED_INTERFACE_NAME = GLOBAL.config.erizoAgent.networkInterface;
+
 GLOBAL.config.erizoAgent.prerunProcesses = GLOBAL.config.erizoAgent.prerunProcesses || 1;
 GLOBAL.config.erizoAgent.maxDurationJS = GLOBAL.config.erizoAgent.maxDurationJS || 24 * 60 * 60;
 GLOBAL.config.erizoAgent.logPath = GLOBAL.config.erizoAgent.logPath || '.';
@@ -406,7 +409,8 @@ amqper.connect(function () {
 //=======
     agentLeader.retrieveId(function(id) {
         myId = id;
-        rpc.bind(id);
+//        rpc.bind(id);
+	amqper.bind(id);
     });
 //>>>>>>> 28e7c7c5cb386dfe5890912a3593c33f6a6e8db8
 });
