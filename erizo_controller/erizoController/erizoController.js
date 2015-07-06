@@ -14,6 +14,7 @@ var Permission = require('./permission');
 var Getopt = require('node-getopt');
 
 var options = {
+    ca: fs.readFileSync('./cert/ca.crt').toString(),
     key: fs.readFileSync('./cert/key.pem').toString(),
     cert: fs.readFileSync('./cert/cert.pem').toString()
 };
