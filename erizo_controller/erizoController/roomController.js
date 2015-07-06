@@ -21,6 +21,7 @@ exports.RoomController = function (spec) {
         externalOutputs = {};
 
     var amqper = spec.amqper;
+    var amqplocal = spec.amqplocal;
 
     var KEEPALIVE_INTERVAL = 5*1000;
     var TIMEOUT_LIMIT = 2;

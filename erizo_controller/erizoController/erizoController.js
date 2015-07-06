@@ -129,6 +129,7 @@ for (var prop in opt.options) {
 // Load submodules with updated config
 var logger = require('./../common/logger').logger;
 var amqper = require('./../common/amqper');
+var amqplocal = require('./../common/amqplocal');
 var controller = require('./roomController');
 
 // Logger
@@ -355,7 +356,7 @@ var listen = function () {
                                 log.debug('Token of p2p room');
                                 room.p2p = true;
                             } else {
-                                room.controller = controller.RoomController({amqper: amqper});
+                                room.controller = controller.RoomController({amqper: amqper, amqplocal: amqplocal});
                                 room.controller.addEventListener(function(type, event) {
                                     // TODO Send message to room? Handle ErizoJS disconnection.
                                     if (type === "unpublish") {

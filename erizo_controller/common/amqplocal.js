@@ -3,11 +3,11 @@ var amqp = require('amqp');
 var logger = require('./logger').logger;
 
 // Logger
-var log = logger.getLogger("AMQPLOCAL");
+var log = logger.getLogger("AMQPER");
 
 // Configuration default values
 GLOBAL.config.rabbit = GLOBAL.config.rabbit || {};
-GLOBAL.config.rabbit.host = 'localhost';
+GLOBAL.config.rabbit.host = GLOBAL.config.rabbit.host || 'localhost';
 GLOBAL.config.rabbit.port = GLOBAL.config.rabbit.port || 5672;
 
 var TIMEOUT = 5000;
