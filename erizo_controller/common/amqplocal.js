@@ -3,12 +3,16 @@ var amqp = require('amqp');
 var logger = require('./logger').logger;
 
 // Logger
-var log = logger.getLogger("AMQPER");
+var log = logger.getLogger("AMQPLOCAL");
 
 // Configuration default values
-GLOBAL.config.rabbit = GLOBAL.config.rabbit || {};
-GLOBAL.config.rabbit.host = GLOBAL.config.rabbit.host || 'localhost';
-GLOBAL.config.rabbit.port = GLOBAL.config.rabbit.port || 5672;
+//GLOBAL.config.rabbit = GLOBAL.config.rabbit || {};
+//GLOBAL.config.rabbit.host = GLOBAL.config.rabbit.host || 'localhost';
+//GLOBAL.config.rabbit.port = GLOBAL.config.rabbit.port || 5672;
+
+GLOBAL.config.locrabbit = {};
+GLOBAL.config.locrabbit.host = 'localhost';
+GLOBAL.config.locrabbit.port = 5672;
 
 var TIMEOUT = 5000;
 
@@ -22,11 +26,11 @@ var connection, rpc_exc, broadcast_exc, clientQueue;
 var addr = {};
 var rpcPublic = {};
 
-if (GLOBAL.config.rabbit.url !== undefined) {
-    addr.url = GLOBAL.config.rabbit.url;
+if (GLOBAL.config.locrabbit.url !== undefined) {
+    addr.url = GLOBAL.config.locrabbit.url;
 } else {
-    addr.host = GLOBAL.config.rabbit.host;
-    addr.port = GLOBAL.config.rabbit.port;
+    addr.host = GLOBAL.config.locrabbit.host;
+    addr.port = GLOBAL.config.locrabbit.port;
 }
 
 exports.setPublicRPC = function(methods) {
@@ -35,7 +39,7 @@ exports.setPublicRPC = function(methods) {
 
 exports.connect = function(callback) {
 
-    // Create the amqp connection to rabbitMQ server
+    // Create the amqp connection to locrabbitMQ server
     connection = amqp.createConnection(addr);
     connection.on('ready', function () {
 

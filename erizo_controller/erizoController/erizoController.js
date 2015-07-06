@@ -924,3 +924,8 @@ amqper.connect(function () {
         log.info("Error in Erizo Controller: ", error);
     }
 });
+
+amqplocal.connect(function () {
+    "use strict";
+    
+});
