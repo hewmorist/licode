@@ -10,10 +10,10 @@
     }
   ],
   "levels": {
-  	"ErizoController": "DEBUG",
+  	"ErizoController": "INFO",
   	"AMQPER": "INFO",
-        "AMQPLOCAL": "DEBUG",
-    "ErizoJS": "DEBUG", 
-    "ErizoJSController": "DEBUG"
+        "AMQPLOCAL": "INFO",
+    "ErizoJS": "INFO", 
+    "ErizoJSController": "INFO"
   }
 }
