@@ -2,7 +2,8 @@
 
 var addon = require('./../../erizoAPI/build/Release/addon');
 var logger = require('./../common/logger').logger;
-var amqplocal = require('./../common/amqplocal');
+var amqper = require('./../common/amqper');
+//var amqplocal = require('./../common/amqplocal');
 
 // Logger
 var log = logger.getLogger("ErizoJSController");
@@ -45,12 +46,16 @@ exports.ErizoJSController = function (spec) {
             }
            // console.log("new STATS ", newStats);
             var timeStamp = new Date();
-            amqplocal.broadcast('stats', {pub: id_pub, subs: id_sub, stats: JSON.parse(newStats), timestamp:timeStamp.getTime()});
+            amqper.broadcast('stats', {pub: id_pub, subs: id_sub, stats: JSON.parse(newStats), timestamp:timeStamp.getTime()});
+            //amqplocal.broadcast('stats', {pub: id_pub, subs: id_sub, stats: JSON.parse(newStats), timestamp:timeStamp.getTime()});
+          
           }, INTERVAL_STATS);
+          
+          
           /*
             wrtc.getStats(function (newStats){
                 var timeStamp = new Date();
-                amqplocal.broadcast('stats', {pub: id_pub, subs: id_sub, stats: JSON.parse(newStats), timestamp:timeStamp.getTime()});
+                amqper.broadcast('stats', {pub: id_pub, subs: id_sub, stats: JSON.parse(newStats), timestamp:timeStamp.getTime()});
             });
             */
         }
@@ -60,7 +65,9 @@ exports.ErizoJSController = function (spec) {
 
             if (GLOBAL.config.erizoController.report.connection_events) {
                 var timeStamp = new Date();
-                amqplocal.broadcast('event', {pub: id_pub, subs: id_sub, type: 'connection_status', status: newStatus, timestamp:timeStamp.getTime()});
+                amqper.broadcast('event', {pub: id_pub, subs: id_sub, type: 'connection_status', status: newStatus, timestamp:timeStamp.getTime()});
+                //amqplocal.broadcast('event', {pub: id_pub, subs: id_sub, type: 'connection_status', status: newStatus, timestamp:timeStamp.getTime()});
+            
             }
 
             switch(newStatus) {

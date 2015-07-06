@@ -56,7 +56,6 @@ for (var prop in opt.options) {
 
 // Load submodules with updated config
 var logger = require('./../common/logger').logger;
-//var amqper = require('./../common/amqper');
 var amqplocal = require('./../common/amqplocal');
 
 // Logger

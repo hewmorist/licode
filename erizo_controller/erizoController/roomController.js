@@ -41,7 +41,7 @@ exports.RoomController = function (spec) {
                     for (var p in erizos[erizo_id].publishers) {
                         dispatchEvent("unpublish", erizos[erizo_id].publishers[p]);
                     }
-                    amqper.callRpc("ErizoAgent", "deleteErizoJS", [erizo_id], {callback: function(){}}); 
+                    amqplocal.callRpc("ErizoAgent", "deleteErizoJS", [erizo_id], {callback: function(){}}); 
                     delete erizos[erizo_id];
                 }
             } else {
@@ -52,14 +52,14 @@ exports.RoomController = function (spec) {
 
     var sendKeepAlive = function() {
         for (var e in erizos) {
-            amqper.callRpc("ErizoJS_" + e, "keepAlive", [], {callback: callbackFor(e)});
+            amqplocal.callRpc("ErizoJS_" + e, "keepAlive", [], {callback: callbackFor(e)});
         }
     };
 
     var keepAliveLoop = setInterval(sendKeepAlive, KEEPALIVE_INTERVAL);
 
     var getErizoJS = function(callback) {
-    	amqper.callRpc("ErizoAgent", "createErizoJS", [], {callback: function(erizo_id) {
+    	amqplocal.callRpc("ErizoAgent", "createErizoJS", [], {callback: function(erizo_id) {
             log.info("Using Erizo", erizo_id);
             if (!erizos[erizo_id] && erizo_id !== 'timeout') {
                 erizos[erizo_id] = {publishers: [], ka_count: 0};
