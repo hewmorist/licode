@@ -111,7 +111,8 @@ Erizo.GetUserMedia = function (config, callback, error) {
                             theConfig.video.mandatory.chromeMediaSourceId = theId;
                             
                         }else{
-                            theConfig = {video: {mandatory: {chromeMediaSource: 'desktop',  chromeMediaSourceId: theId }}};
+                            theConfig = {video: {mandatory: {chromeMediaSource: 'desktop',  chromeMediaSourceId: theId, 
+                                        maxHeight: screen.height, maxWidth: screen.width, minFrameRate: 1, maxFrameRate: 5 }}};
                         }
                         navigator.getMedia(theConfig,callback,error);
                     });
