@@ -56,7 +56,7 @@ for (var prop in opt.options) {
 
 // Load submodules with updated config
 var logger = require('./../common/logger').logger;
-var amqper = require('./../common/amqper');
+var amqplocal = require('./../common/amqplocal');
 
 // Logger
 var log = logger.getLogger("ErizoAgent");
@@ -209,14 +209,14 @@ if (GLOBAL.config.erizoAgent.publicIP === '' || GLOBAL.config.erizoAgent.publicI
 
 fillErizos();
 
-amqper.connect(function () {
+amqplocal.connect(function () {
     "use strict";
-    amqper.setPublicRPC(api);
+    amqplocal.setPublicRPC(api);
 
     var rpcID = "ErizoAgent";
     
 
-    amqper.bind(rpcID);
+    amqplocal.bind(rpcID);
 
 });
 

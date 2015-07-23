@@ -1,13 +1,24 @@
 /*global require, logger. setInterval, clearInterval, Buffer, exports*/
+var express = require('express');
+var fs = require("fs");
+var bodyParser = require('body-parser');
 var crypto = require('crypto');
 var rpcPublic = require('./rpc/rpcPublic');
 var ST = require('./Stream');
 var http = require('http');
+var https = require('https');
 var server = http.createServer();
-var io = require('socket.io').listen(server, {log:false});
+//var io = require('socket.io').listen(server, {log:false});
 var config = require('./../../licode_config');
 var Permission = require('./permission');
 var Getopt = require('node-getopt');
+
+var options = {
+    ca: fs.readFileSync('./cert/ca.crt').toString(),
+    key: fs.readFileSync('./cert/key.pem').toString(),
+    cert: fs.readFileSync('./cert/cert.pem').toString()
+};
+
 
 // Configuration default values
 GLOBAL.config = config || {};
@@ -31,6 +42,39 @@ GLOBAL.config.erizoController.interval_time_keepAlive = GLOBAL.config.erizoContr
 GLOBAL.config.erizoController.report.session_events = GLOBAL.config.erizoController.report.session_events || false;
 GLOBAL.config.erizoController.recording_path = GLOBAL.config.erizoController.recording_path || undefined;
 GLOBAL.config.erizoController.roles = GLOBAL.config.erizoController.roles || {"presenter":{"publish": true, "subscribe":true, "record":true}, "viewer":{"subscribe":true}, "viewerWithData":{"subscribe":true, "publish":{"audio":false,"video":false,"screen":false,"data":true}}};
+
+var app = express();
+
+app.use(bodyParser());
+
+//app.configure(function () {
+//    "use strict";
+//    app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+//    app.use(express.logger());
+//});
+
+app.use(function (req, res, next) {
+    "use strict";
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header('Access-Control-Allow-Headers', 'origin, content-type');
+    if (req.method == 'OPTIONS') {
+        res.send(200);
+    }
+    else {
+        next();
+    }
+});
+
+
+
+var sslserver = https.createServer(options, app);
+var io = require('socket.io').listen(sslserver, {log:true});
+sslserver.listen(8443);
+
+
+
+
 
 // Parse command line arguments
 var getopt = new Getopt([
@@ -86,12 +130,13 @@ for (var prop in opt.options) {
 // Load submodules with updated config
 var logger = require('./../common/logger').logger;
 var amqper = require('./../common/amqper');
+var amqplocal = require('./../common/amqplocal');
 var controller = require('./roomController');
 
 // Logger
 var log = logger.getLogger("ErizoController");
 
-server.listen(8080);
+//server.listen(8080);
 
 io.set('log level', 0);
 
@@ -312,7 +357,7 @@ var listen = function () {
                                 log.debug('Token of p2p room');
                                 room.p2p = true;
                             } else {
-                                room.controller = controller.RoomController({amqper: amqper});
+                                room.controller = controller.RoomController({amqper: amqper, amqplocal: amqplocal});
                                 room.controller.addEventListener(function(type, event) {
                                     // TODO Send message to room? Handle ErizoJS disconnection.
                                     if (type === "unpublish") {
@@ -489,14 +534,14 @@ var listen = function () {
                         socket.emit('connection_failed',{});
                         socket.state = 'sleeping';
                         if (!socket.room.p2p) {
-                            socket.room.controller.removePublisher(id);
+                            socket.room.controller.removePublisher(streamId);
                             if (GLOBAL.config.erizoController.report.session_events) {
                                 var timeStamp = new Date();
-                                amqper.broadcast('event', {room: socket.room.id, user: socket.id, type: 'failed', stream: id, sdp: signMess.sdp, timestamp: timeStamp.getTime()});
+                                amqper.broadcast('event', {room: socket.room.id, user: socket.id, type: 'failed', stream: streamId, timestamp: timeStamp.getTime()});
                             }
                         }
 
-                        var index = socket.streams.indexOf(id);
+                        var index = socket.streams.indexOf(streamId);
                         if (index !== -1) {
                             socket.streams.splice(index, 1);
                         }
@@ -879,4 +924,9 @@ amqper.connect(function () {
     } catch (error) {
         log.info("Error in Erizo Controller: ", error);
     }
+});
+
+amqplocal.connect(function () {
+    "use strict";
+    
 });

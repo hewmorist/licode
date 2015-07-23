@@ -52,7 +52,7 @@ for (var prop in opt.options) {
 
 // Load submodules with updated config
 var logger = require('./../common/logger').logger;
-var amqper = require('./../common/amqper');
+var amqplocal = require('./../common/amqplocal');
 var controller = require('./erizoJSController');
 
 // Logger
@@ -68,16 +68,16 @@ ejsController.keepAlive = function(callback) {
 ejsController.privateRegexp = new RegExp(process.argv[3], 'g');
 ejsController.publicIP = process.argv[4];
 
-amqper.connect(function () {
+amqplocal.connect(function () {
     "use strict";
     try {
-        amqper.setPublicRPC(ejsController);
+        amqplocal.setPublicRPC(ejsController);
 
         var rpcID = process.argv[2];
 
         log.info("ID: ErizoJS_" + rpcID);
 
-        amqper.bind("ErizoJS_" + rpcID, function() {
+        amqplocal.bind("ErizoJS_" + rpcID, function() {
             log.info("ErizoJS started");
             
         });
