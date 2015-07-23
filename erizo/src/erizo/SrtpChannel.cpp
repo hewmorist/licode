@@ -4,6 +4,7 @@
 
 #include <srtp/srtp.h>
 #include <nice/nice.h>
+#include <srtp/datatypes.h>
 
 #include "SrtpChannel.h"
 
@@ -112,8 +113,8 @@ bool SrtpChannel::configureSrtpSession(srtp_t *session, const char* key,
         enum TransmissionType type) {
     srtp_policy_t policy;
     memset(&policy, 0, sizeof(policy));
-    crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
-    crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
+    srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
+    srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
     if (type == SENDING) {
         policy.ssrc.type = ssrc_any_outbound;
     } else {
@@ -129,12 +130,12 @@ bool SrtpChannel::configureSrtpSession(srtp_t *session, const char* key,
 
     gsize len = 0;
     uint8_t *akey = (uint8_t*) g_base64_decode((gchar*) key, &len);
-    ELOG_DEBUG("set master key/salt to %s/", octet_string_hex_string(akey, 16));
+    ELOG_DEBUG("set master key/salt to %s/", srtp_octet_string_hex_string(akey, 16));
     // allocate and initialize the SRTP session
     policy.key = akey;
     int res = srtp_create(session, &policy);
     if (res!=0){
-      ELOG_ERROR("Failed to create srtp session with %s, %d", octet_string_hex_string(akey, 16), res);
+      ELOG_ERROR("Failed to create srtp session with %s, %d", srtp_octet_string_hex_string(akey, 16), res);
     }
     g_free(akey); akey = NULL;
     return res!=0? false:true;

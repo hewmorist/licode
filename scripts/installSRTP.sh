@@ -159,7 +159,8 @@ install_mediadeps_nogpl(){
 install_libsrtp(){
   if [ ! -f $PREFIX_DIR/lib/libsrtp.a ]; then
     cd $ROOT/third_party/libsrtp
-    CFLAGS="-fPIC" ./configure --enable-openssl --prefix=$PREFIX_DIR
+    # CFLAGS="-fPIC" ./configure --enable-openssl --prefix=$PREFIX_DIR
+    CFLAGS="-fPIC" ./configure  --prefix=$PREFIX_DIR
     make -s V=0
     make uninstall
     make install
@@ -184,18 +185,18 @@ parse_arguments $*
 
 mkdir -p $PREFIX_DIR
 
-install_apt_deps
-check_proxy
-install_openssl
-install_libnice
+# install_apt_deps
+# check_proxy
+# install_openssl
+# install_libnice
 install_libsrtp
 
-install_opus
-if [ "$ENABLE_GPL" = "true" ]; then
-  install_mediadeps
-else
-  install_mediadeps_nogpl
-fi
+#install_opus
+#if [ "$ENABLE_GPL" = "true" ]; then
+#  install_mediadeps
+#else
+#  install_mediadeps_nogpl
+#fi
 
 if [ "$CLEANUP" = "true" ]; then
   echo "Cleaning up..."

@@ -135,8 +135,8 @@ install_mediadeps_nogpl(){
 }
 
 install_libsrtp(){
-  cd $ROOT/third_party/srtp
-  CFLAGS="-fPIC" ./configure --prefix=$PREFIX_DIR
+  cd $ROOT/third_party/libsrtp
+  CFLAGS="-fPIC" ./configure --enable-openssl --prefix=$PREFIX_DIR
   make -s V=0
   make uninstall
   make install
