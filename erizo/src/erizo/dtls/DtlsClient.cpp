@@ -18,8 +18,8 @@
 
 extern "C"
 {
-#include <srtp/srtp.h>
-#include <srtp/srtp_priv.h>
+#include <srtp2/srtp.h>
+#include <srtp2/srtp_priv.h>
 }
 
 using namespace std;

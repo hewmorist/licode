@@ -158,17 +158,16 @@ install_mediadeps_nogpl(){
 
 install_libsrtp(){
   if [ ! -f $PREFIX_DIR/lib/libsrtp2.a ]; then
-    cd $ROOT/third_party      
+    cd $ROOT/third_party
     git clone https://github.com/cisco/libsrtp.git
     cd $ROOT/third_party/libsrtp
     CFLAGS="-fPIC" ./configure --enable-openssl --prefix=$PREFIX_DIR
     make -s V=0
     make uninstall
     make install
-  #Copy header files not in the make install target
+# Copy header files not in the make install target
     cp -f include/*.h $PREFIX_DIR/include/srtp2/
     cp -f crypto/include/*.h $PREFIX_DIR/include/srtp2/
-
 
     cd $CURRENT_DIR
   else
@@ -191,18 +190,18 @@ parse_arguments $*
 
 mkdir -p $PREFIX_DIR
 
-install_apt_deps
-check_proxy
-install_openssl
-install_libnice
+# install_apt_deps
+# check_proxy
+# install_openssl
+# install_libnice
 install_libsrtp
 
-install_opus
-if [ "$ENABLE_GPL" = "true" ]; then
-  install_mediadeps
-else
-  install_mediadeps_nogpl
-fi
+#install_opus
+#if [ "$ENABLE_GPL" = "true" ]; then
+#  install_mediadeps
+#else
+#  install_mediadeps_nogpl
+#fi
 
 if [ "$CLEANUP" = "true" ]; then
   echo "Cleaning up..."

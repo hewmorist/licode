@@ -7,7 +7,7 @@
 
 #include <string>
 #include <netinet/in.h>
-#include <srtp/srtp.h>
+#include <srtp2/srtp.h>
 #include <boost/thread/mutex.hpp>
 
 #include "rtp/RtpHeaders.h"

@@ -135,12 +135,24 @@ install_mediadeps_nogpl(){
 }
 
 install_libsrtp(){
-  cd $ROOT/third_party/srtp
-  CFLAGS="-fPIC" ./configure --prefix=$PREFIX_DIR
-  make -s V=0
-  make uninstall
-  make install
-  cd $CURRENT_DIR
+  if [ ! -f $PREFIX_DIR/lib/libsrtp2.a ]; then
+    cd $ROOT/third_party      
+    git clone https://github.com/cisco/libsrtp.git
+    cd $ROOT/third_party/libsrtp
+    CFLAGS="-fPIC" ./configure --enable-openssl --prefix=$PREFIX_DIR
+    make -s V=0
+    make uninstall
+    make install
+  #Copy header files not in the make install target
+    cp -f include/*.h $PREFIX_DIR/include/srtp2/
+    cp -f crypto/include/*.h $PREFIX_DIR/include/srtp2/
+
+
+    cd $CURRENT_DIR
+  else
+    echo "srtp already installed"
+  fi
+
 }
 
 
