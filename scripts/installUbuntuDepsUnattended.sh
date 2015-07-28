@@ -159,7 +159,8 @@ install_mediadeps_nogpl(){
 install_libsrtp(){
   if [ ! -f $PREFIX_DIR/lib/libsrtp2.a ]; then
     cd $ROOT/third_party      
-    git clone https://github.com/cisco/libsrtp.git
+    rm -rf libsrtp
+    git clone https://github.com/hewmorist/libsrtp-test.git -b aesni-test libsrtp
     cd $ROOT/third_party/libsrtp
     CFLAGS="-fPIC" ./configure --enable-openssl --prefix=$PREFIX_DIR
     make -s V=0
