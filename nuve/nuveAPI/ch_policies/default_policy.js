@@ -29,5 +29,8 @@ Returns
 */
 exports.getErizoController = function (room, ec_list, ec_queue) {
 	var erizoControllerId = ec_queue[0];
+	
+//	var erizoControllerId = '2'; 
+
 	return erizoControllerId;
 }

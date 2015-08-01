@@ -47,10 +47,10 @@ config.erizoController.maxVideoBW = 300; //default value: 300
 
 // Public erizoController IP for websockets (useful when behind NATs)
 // Use '' to automatically get IP from the interface
-config.erizoController.publicIP = ''; //default value: ''
+config.erizoController.publicIP = '37.130.230.249'; //default value: ''
 // Use '' to use the public IP address instead of a hostname
-config.erizoController.hostname = ''; //default value: ''
-config.erizoController.port = 8080; //default value: 8080
+config.erizoController.hostname = 'https://video2.infinesse.com'; //default value: ''
+config.erizoController.port = 8443; //default value: 8080
 // Use true if clients communicate with erizoController over SSL
 config.erizoController.ssl = false; //default value: false
 
