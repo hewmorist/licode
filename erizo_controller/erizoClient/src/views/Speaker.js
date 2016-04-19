@@ -102,6 +102,14 @@ Erizo.Speaker = function (spec) {
         that.div.onmouseout = function (evt) {
             show('none');
         };
+        
+        that.mute = function() {
+            mute();
+        };
+        
+        that.unmute = function() {
+            unmute();
+        };
 
         show('none');
 
